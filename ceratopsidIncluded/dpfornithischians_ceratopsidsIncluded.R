@@ -16,11 +16,8 @@ library("vegan")
 #if (!requireNamespace("BiocManager", quietly = TRUE)){  install.packages("BiocManager") }
 #BiocManager::install("pcaMethods")
 
-# automatically set working directory to where R script is saved
-setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
-
 # import data
-crownAll<-read_excel("Table S1.xlsx", sheet="Raw Data")
+crownAll<-read_excel("ceratopsidIncluded/dpfornithishcians_ceratopsidsIncluded.xlsx", sheet="Raw Data")
 crownAll<-crownAll[1:90,1:17]
 colnames(crownAll)<-c("Family", "Subfamily", "Genus", "Specimen Number", "Tooth Type", "CBL", "CH","M-CL", "AL",  "NL", "MCL", "DCL", "MDH", "MDL", "DDH", "DDL", "CA")
 
