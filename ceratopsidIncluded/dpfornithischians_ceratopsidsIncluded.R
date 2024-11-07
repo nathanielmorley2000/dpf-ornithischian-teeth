@@ -280,6 +280,25 @@ ggsave( filename= 'subfamily_lda.svg' , # name of the file
 ################################## conduct PERMANOVA ###########################################################
 ###############################################################################################################
 
+data.scores <- c(ldaFamily$myplot$data$Groups, ldaFamily$myplot$data$one, ldaFamily$myplot$data$two)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 THE.STATS<-function(
     crownAdjusted,
     col.to.group.by, # the name of the column containing the grouping information
