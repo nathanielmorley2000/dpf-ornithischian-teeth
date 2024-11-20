@@ -254,6 +254,13 @@ ggsave( filename= 'family_lda.svg' , # name of the file
   dpi= 1000,
   scale = 0.6) # the quality of the plot exported
 
+ggplot(myLDAFam.components, aes(x = rowname, y = CV1)) +
+  geom_bar(stat = "identity", color = "red", fill = "red") +
+  xlab("Variable") +
+  labels
+  theme_classic()
+
+
 ################################################### Subfamily ############################################
 x=ldaSubfamily$lda
 x=ldaSubfamily$lda%>%.$scaling%>%data.frame()
@@ -268,12 +275,14 @@ groupname = set_names(x=c("Ankylosauridae", "Nodosauridae", "Centrosaurinae", "C
 lda_plottr(y, colscheme, shapescheme, groupname)
 
 # save plot as .svg file
-ggsave( filename= 'subfamily_lda.svg' , # name of the file
+ggsave(filename= 'subfamily_lda.svg' , # name of the file
         width = 700,
         height = 500,
         units = "mm", 
         dpi= 1000,
         scale = 0.6) # the quality of the plot exported
+
+
 
 ###############################################################################################################################################
 ###############################################################################################################
