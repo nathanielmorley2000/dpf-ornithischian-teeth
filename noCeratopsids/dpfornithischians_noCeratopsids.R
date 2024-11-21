@@ -16,8 +16,11 @@ library("vegan")
 #if (!requireNamespace("BiocManager", quietly = TRUE)){  install.packages("BiocManager") }
 #BiocManager::install("pcaMethods")
 
+# set working directory to noCeratopsids folder
+setwd("noCeratopsids/")
+
 # import data 
-crownAll<-read_excel("noCeratopsids/dpfornithishcians_noCeratopsids.xlsx", sheet="Raw Data")
+crownAll<-read_excel("dpfornithishcians_noCeratopsids.xlsx", sheet="Raw Data")
 crownAll<-crownAll[1:57,1:17]
 colnames(crownAll)<-c("Family", "Subfamily", "Genus", "Specimen Number", "Tooth Type", "CBL", "CH","M-CL", "AL",  "NL", "MCL", "DCL", "MDH", "MDL", "DDH", "DDL", "CA")
 
@@ -148,16 +151,16 @@ myLDAproportions <- data.frame(Family = c(ldaFamily$proportion.of.trace,rep(NA, 
   t() %>%
   as.data.frame() %>%
   round(., digits = 4) %>%
-  rownames_to_column() #%>%
-  #rename(CV1 = V1, CV2 = V2, CV3 = V3, CV4 = V4, CV5 = V5, CV6 = V6)
+  rownames_to_column() %>%
+  rename(CV1 = V1, CV2 = V2, CV3 = V3, CV4 = V4)
 myLDAFam.components=ldaFamily$coefficients%>%as.data.frame() %>% 
   round(., digits = 4) %>%
-  rownames_to_column() #%>%
-  #rename(CV1 = LD1, CV2 = LD2, CV3 = LD3, CV4 = LD4)
+  rownames_to_column() %>%
+  rename(CV1 = LD1, CV2 = LD2, CV3 = LD3)
 myLDAsubFam.components=ldaSubfamily$coefficients%>%as.data.frame() %>% 
   round(., digits = 4) %>%  
-  rownames_to_column() #%>%
-  #rename(CV1 = LD1, CV2 = LD2, CV3 = LD3, CV4 = LD4, CV5 = LD5, CV6 = LD6)
+  rownames_to_column() %>%
+  rename(CV1 = LD1, CV2 = LD2, CV3 = LD3, CV4 = LD4)
 myLDAFam.tab=ldaFamily$mytab%>%as.data.frame()%>%spread(.,Actual, Freq)
 myLDAsubFam.tab=ldaSubfamily$mytab%>%as.data.frame()%>%spread(.,Actual, Freq)
 perctab=data.frame(class=c("Family","Subfamily"), perc=c(ldaFamily$perctab, ldaSubfamily$perctab) )%>% # input percentages into one data.frame for export
@@ -233,6 +236,9 @@ lda_plottr=function(y, colscheme, shapescheme, groupname){
   return(myplot)}
 
 ################################################### Family ############################################
+
+
+# CVA plot
 x=ldaFamily$lda
 x=ldaFamily$lda%>%.$scaling%>%data.frame()
 y=ldaFamily$myplot%>%.$data
@@ -244,7 +250,7 @@ groupname = set_names(x=c("Ankylosauria", "Leptoceratopsidae", "Pachycephalosaur
                       nm=c("A", "Le", "Pa", "Th") )
 lda_plottr(y, colscheme, shapescheme, groupname)
 
-# save plot as .svg file
+# save CVA plot as .svg file
 ggsave( filename= 'family_lda.svg' , # name of the file
   width = 700,
   height = 500,
@@ -252,7 +258,35 @@ ggsave( filename= 'family_lda.svg' , # name of the file
   dpi= 1000,
   scale = 0.6) # the quality of the plot exported
 
+# loadings plot for CV1 and CV2
+variables <- myLDAFam.components$rowname
+
+loadingsFam <- myLDAFam.components %>%
+  subset(., select = c(rowname, CV1, CV2)) %>%
+  pivot_longer(!rowname, names_to = "component", values_to = "loading") 
+
+ggplot(loadingsFam, aes(x = factor(rowname, variables), y = loading, fill = component)) +
+  geom_bar(stat="identity", width = 0.8, position = position_dodge(width = 0.8)) + 
+  labs(y = "Loading",
+       x = "Variable") +
+  guides(fill=guide_legend(title="Axis")) +
+  theme_classic(base_size = 33) +
+  theme(axis.title.x=element_text(size=35, vjust=-0.5, color="black"),
+        axis.title.y=element_text(size=35, angle=90, vjust=3, color="black"),
+        legend.title = element_text(size = 38),
+        legend.text = element_text(size=35))
+
+# save loadings plot as .svg file   
+ggsave(filename= 'familyloadings.svg' ,
+       width = 800,
+       height = 600,
+       units = "mm", 
+       dpi= 1000,
+       scale = 0.6)
+
 ################################################### Subfamily ############################################
+
+# CVA Plot
 x=ldaSubfamily$lda
 x=ldaSubfamily$lda%>%.$scaling%>%data.frame()
 y=ldaSubfamily$myplot%>%.$data
@@ -273,6 +307,30 @@ ggsave( filename= 'subfamily_lda.svg' , # name of the file
         dpi= 1000,
         scale = 0.6) # the quality of the plot exported
 
+
+# loadings plot for CV1 and CV2
+loadingsSubfam <- myLDAsubFam.components %>%
+  subset(., select = c(rowname, CV1, CV2)) %>%
+  pivot_longer(!rowname, names_to = "component", values_to = "loading") 
+
+ggplot(loadingsSubfam, aes(x = factor(rowname, variables), y = loading, fill = component)) +
+  geom_bar(stat="identity", width = 0.8, position = position_dodge(width = 0.8)) + 
+  labs(y = "Loading",
+       x = "Variable") +
+  guides(fill=guide_legend(title="Axis")) +
+  theme_classic(base_size = 33) +
+  theme(axis.title.x=element_text(size=35, vjust=-0.5, color="black"),
+        axis.title.y=element_text(size=35, angle=90, vjust=3, color="black"),
+        legend.title = element_text(size = 38),
+        legend.text = element_text(size=35))
+
+# save loadings plot as .svg file   
+ggsave(filename= 'subfamilyloadings.svg' ,
+       width = 800,
+       height = 600,
+       units = "mm", 
+       dpi= 1000,
+       scale = 0.6)
 ###############################################################################################################################################
 ###############################################################################################################
 ################################## conduct PERMANOVA ###########################################################
