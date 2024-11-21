@@ -16,6 +16,9 @@ library("vegan")
 #if (!requireNamespace("BiocManager", quietly = TRUE)){  install.packages("BiocManager") }
 #BiocManager::install("pcaMethods")
 
+# set working directory to ceratopsidIncluded folder
+setwd("ceratopsidIncluded/")
+
 # import data
 crownAll<-read_excel("dpfornithishcians_ceratopsidsIncluded.xlsx", sheet="Raw Data")
 crownAll<-crownAll[1:90,1:17]
