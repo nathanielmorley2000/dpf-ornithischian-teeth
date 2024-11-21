@@ -17,7 +17,7 @@ library("vegan")
 #BiocManager::install("pcaMethods")
 
 # import data
-crownAll<-read_excel("ceratopsidIncluded/dpfornithishcians_ceratopsidsIncluded.xlsx", sheet="Raw Data")
+crownAll<-read_excel("dpfornithishcians_ceratopsidsIncluded.xlsx", sheet="Raw Data")
 crownAll<-crownAll[1:90,1:17]
 colnames(crownAll)<-c("Family", "Subfamily", "Genus", "Specimen Number", "Tooth Type", "CBL", "CH","M-CL", "AL",  "NL", "MCL", "DCL", "MDH", "MDL", "DDH", "DDL", "CA")
 
@@ -235,6 +235,8 @@ lda_plottr=function(y, colscheme, shapescheme, groupname){
   return(myplot)}
 
 ################################################### Family ############################################
+
+# CVA plot
 x=ldaFamily$lda
 x=ldaFamily$lda%>%.$scaling%>%data.frame()
 y=ldaFamily$myplot%>%.$data
@@ -246,22 +248,43 @@ groupname = set_names(x=c("Ankylosauria", "Ceratopsidae", "Leptoceratopsidae", "
                       nm=c("A", "C", "Le", "Pa", "Th") )
 lda_plottr(y, colscheme, shapescheme, groupname)
 
-# save plot as .svg file
-ggsave( filename= 'family_lda.svg' , # name of the file
+# save CVA plot as .svg file
+ggsave(filename= 'family_lda.svg' , 
   width = 700,
   height = 500,
   units = "mm", 
   dpi= 1000,
-  scale = 0.6) # the quality of the plot exported
+  scale = 0.6)
 
-ggplot(myLDAFam.components, aes(x = rowname, y = CV1)) +
-  geom_bar(stat = "identity", color = "red", fill = "red") +
-  xlab("Variable") +
-  labels
-  theme_classic()
+# loadings plot for CV1 and CV2
+variables <- myLDAFam.components$rowname
+  
+loadingsFam <- myLDAFam.components %>%
+  subset(., select = c(rowname, CV1, CV2)) %>%
+  pivot_longer(!rowname, names_to = "component", values_to = "loading") 
 
+ggplot(loadingsFam, aes(x = factor(rowname, variables), y = loading, fill = component)) +
+  geom_bar(stat="identity", width = 0.8, position = position_dodge(width = 0.8)) + 
+  labs(y = "Loading",
+       x = "Variable") +
+  guides(fill=guide_legend(title="Axis")) +
+  theme_classic(base_size = 33) +
+  theme(axis.title.x=element_text(size=35, vjust=-0.5, color="black"),
+        axis.title.y=element_text(size=35, angle=90, vjust=3, color="black"),
+        legend.title = element_text(size = 38),
+        legend.text = element_text(size=35))
+
+# save loadings plot as .svg file   
+ggsave(filename= 'familyloadings.svg' ,
+       width = 800,
+       height = 600,
+       units = "mm", 
+       dpi= 1000,
+       scale = 0.6)
 
 ################################################### Subfamily ############################################
+
+# CVA plot
 x=ldaSubfamily$lda
 x=ldaSubfamily$lda%>%.$scaling%>%data.frame()
 y=ldaSubfamily$myplot%>%.$data
@@ -274,39 +297,43 @@ groupname = set_names(x=c("Ankylosauridae", "Nodosauridae", "Centrosaurinae", "C
                       nm=c("Anky", "No", "Ce", "Ch", "Le", "Pa", "Or") )
 lda_plottr(y, colscheme, shapescheme, groupname)
 
-# save plot as .svg file
-ggsave(filename= 'subfamily_lda.svg' , # name of the file
+# save CVA plot as .svg file
+ggsave(filename= 'subfamily_lda.svg',
         width = 700,
         height = 500,
         units = "mm", 
         dpi= 1000,
-        scale = 0.6) # the quality of the plot exported
+        scale = 0.6)
 
+# loadings plot for CV1 and CV2
+loadingsSubfam <- myLDAsubFam.components %>%
+  subset(., select = c(rowname, CV1, CV2)) %>%
+  pivot_longer(!rowname, names_to = "component", values_to = "loading") 
+
+ggplot(loadingsSubfam, aes(x = factor(rowname, variables), y = loading, fill = component)) +
+  geom_bar(stat="identity", width = 0.8, position = position_dodge(width = 0.8)) + 
+  labs(y = "Loading",
+       x = "Variable") +
+  guides(fill=guide_legend(title="Axis")) +
+  theme_classic(base_size = 33) +
+  theme(axis.title.x=element_text(size=35, vjust=-0.5, color="black"),
+        axis.title.y=element_text(size=35, angle=90, vjust=3, color="black"),
+        legend.title = element_text(size = 38),
+        legend.text = element_text(size=35))
+
+# save loadings plot as .svg file   
+ggsave(filename= 'subfamilyloadings.svg' ,
+       width = 800,
+       height = 600,
+       units = "mm", 
+       dpi= 1000,
+       scale = 0.6)
 
 
 ###############################################################################################################################################
 ###############################################################################################################
 ################################## conduct PERMANOVA ###########################################################
 ###############################################################################################################
-
-data.scores <- c(ldaFamily$myplot$data$Groups, ldaFamily$myplot$data$one, ldaFamily$myplot$data$two)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 THE.STATS<-function(
     crownAdjusted,
