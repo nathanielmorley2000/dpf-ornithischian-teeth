@@ -1,38 +1,63 @@
 # load libraries
 library("plyr")
-library("dplyr")
-library("tidyverse")
-library("readxl") 
-library("pcaMethods")
-library("ggplot2")
-library("rJava")
-library("xlsx")
-library("purrr")
-library("MASS")
+library("dplyr") 
 library("ggord")
+library("ggplot2")
+library("MASS")
 library("openxlsx")
-library("ggpubr")
+library("pcaMethods")
+library("purrr")
+library("readxl") 
+library("tibble")
+library("tidyr")
 library("vegan")
-#if (!requireNamespace("BiocManager", quietly = TRUE)){  install.packages("BiocManager") }
+
+
+# install BiocManager and pcaMethods - keep commented out unless needed
+#if (!requireNamespace("BiocManager", quietly = TRUE)){
+#  install.packages("BiocManager") 
+#  }
 #BiocManager::install("pcaMethods")
 
-# set working directory to ceratopsidIncluded folder
-setwd("ceratopsidIncluded/")
 
 # import data
-crownAll<-read_excel("dpfornithishcians_ceratopsidsIncluded.xlsx", sheet="Raw Data")
+crownAll<-read_excel("ceratopsidIncluded/dpfornithishcians_ceratopsidsIncluded.xlsx", sheet="Raw Data")
 crownAll<-crownAll[1:90,1:17]
 colnames(crownAll)<-c("Family", "Subfamily", "Genus", "Specimen Number", "Tooth Type", "CBL", "CH","M-CL", "AL",  "NL", "MCL", "DCL", "MDH", "MDL", "DDH", "DDL", "CA")
+
 
 # alter factor levels to match those used for referencing in the subsequent code
 crownAll$Family<-revalue(crownAll$Family, c("Ceratopsidae"="C", "Ankylosauria"="A", "Leptoceratopsidae"="Le", "Pachycephalosauria"="Pa", "Thescelosauridae"="Th"))
 crownAll$Subfamily<-revalue(crownAll$Subfamily, c("Centrosaurinae"="Ce", "Chasmosaurinae"="Ch", "Ankylosauridae"="Anky", "Nodosauridae"="No","Leptoceratopsidae"="Le", "Pachycephalosauridae"="Pa", "Orodrominae"="Or"))
 
 
-#############################################################################################################################################
-################################### imputation-specific self-made function  ####################################################
-#############################################################################################################################################
-###############################################################################################################################################
+
+# Data Preparation =============================================================
+
+## Define functions ============================================================
+
+### Perform BPCA ===============================================================
+
+### takes data frame of certain dimensions(e.g. cranial_hadro[,8:19]) and imputes, retrieves data
+##data frame must have data in columns 8 to 19 while columns 1 to 7 are documentation
+BPCA_data <- function(data,range1,range2,range3){
+  added_lin<-data[,range1] + 0.001
+  log_lin<-log10(added_lin)
+  log_all<-cbind(log_lin, data[,range3])
+  
+  # range represents the log-transformed data columns through numbers in square brackets with your first numerical column and your last numerical column, respectifully. 
+  # use correlation matrix for PCA because SSI is a unitless measurement
+  est_data<-pcaMethods::pca(log_all,method="bpca",centre=FALSE, cor=TRUE)
+  
+  est_matrix<-est_data@completeObs # This will retrieve the estimated matrix from the previous function.
+  fin<-cbind(data[,range2],est_matrix)
+  #est_matrix # This will display your new estimated matrix.  You can  copy and paste it out of R if you want.
+  
+  return(fin)}
+
+
+## Define imputation function ==================================================
+
 # impute_classy separates into subsets based on family and then runs BPCA imputation of a subset of a provided dataset of cranial variables (cranial) 
 ## using the range of the data columns (range1) and the range for the specimen information (range2)
 ## it then combines the imputed subsets and returns a single imputed dataset
@@ -51,22 +76,7 @@ impute_class<-function(crown,range1,range2,range3){
   ########################################################
   
   ##################################################
-  ### takes data frame of certain dimensions(e.g. cranial_hadro[,8:19]) and imputes, retrieves data
-  ##data frame must have data in columns 8 to 19 while columns 1 to 7 are documentation
-  BPCA_data <- function(data,range1,range2,range3){
-    added_lin<-data[,range1] + 0.001
-    log_lin<-log10(added_lin)
-    log_all<-cbind(log_lin, data[,range3])
-    
-    # range represents the log-transformed data columns through numbers in square brackets with your first numerical column and your last numerical column, respectifully. 
-    # use correlation matrix for PCA because SSI is a unitless measurement
-    est_data<-pca(log_all,method="bpca",centre=FALSE, cor=TRUE)
-    
-    est_matrix<-est_data@completeObs # This will retrieve the estimated matrix from the previous function.
-    fin<-cbind(data[,range2],est_matrix)
-    #est_matrix # This will display your new estimated matrix.  You can  copy and paste it out of R if you want.
-    
-    return(fin)}
+
   
   ##### run imputation on individual data sets
   finCranAnk<-BPCA_data(ank,range1, range2, range3)
@@ -74,7 +84,7 @@ impute_class<-function(crown,range1,range2,range3){
   finCranLepto<-BPCA_data(lepto,range1, range2, range3)
   finCranThesc<-BPCA_data(thesc,range1, range2, range3)
   finCranPachy<-BPCA_data(pachy,range1, range2, range3)
-  finCranThesc <- subset (finCranThesc, Family =="Th")
+  finCranThesc <- subset(finCranThesc, Family =="Th")
   
   cranData<-rbind(finCranAnk,finCranCer,finCranLepto,finCranThesc,finCranPachy)### combine the above imputed subsets into a single dataset 
   
@@ -154,15 +164,15 @@ myLDAproportions <- data.frame(Family = c(ldaFamily$proportion.of.trace,rep(NA, 
   as.data.frame() %>%
   round(., digits = 4) %>%
   rownames_to_column() %>%
-  rename(CV1 = V1, CV2 = V2, CV3 = V3, CV4 = V4, CV5 = V5, CV6 = V6)
+  dplyr::rename(CV1 = V1, CV2 = V2, CV3 = V3, CV4 = V4, CV5 = V5, CV6 = V6)
 myLDAFam.components=ldaFamily$coefficients%>%as.data.frame() %>% 
   round(., digits = 4) %>%
   rownames_to_column()%>%
-  rename(CV1 = LD1, CV2 = LD2, CV3 = LD3, CV4 = LD4)
+  dplyr::rename(CV1 = LD1, CV2 = LD2, CV3 = LD3, CV4 = LD4)
 myLDAsubFam.components=ldaSubfamily$coefficients%>%as.data.frame() %>% 
   round(., digits = 4) %>%  
   rownames_to_column() %>%
-  rename(CV1 = LD1, CV2 = LD2, CV3 = LD3, CV4 = LD4, CV5 = LD5, CV6 = LD6)
+  dplyr::rename(CV1 = LD1, CV2 = LD2, CV3 = LD3, CV4 = LD4, CV5 = LD5, CV6 = LD6)
 myLDAFam.tab=ldaFamily$mytab%>%as.data.frame()%>%spread(.,Actual, Freq)
 myLDAsubFam.tab=ldaSubfamily$mytab%>%as.data.frame()%>%spread(.,Actual, Freq)
 perctab=data.frame(class=c("Family","Subfamily"), perc=c(ldaFamily$perctab, ldaSubfamily$perctab) )%>% # input percentages into one data.frame for export
@@ -192,7 +202,7 @@ openxlsx::writeData(wrkbk, 6, myLDAsubFam.tab)
 openxlsx::addWorksheet(wb=wrkbk, "percTabs" )
 openxlsx::writeData(wrkbk, 7, perctab)
 
-openxlsx::saveWorkbook(wrkbk, "toothy_LDA_results.xlsx")
+openxlsx::saveWorkbook(wrkbk, "ceratopsidIncluded/Results/toothy_LDA_results.xlsx")
 ############################################################################
 
 ########### new function to produce plots ###########
@@ -252,7 +262,7 @@ groupname = set_names(x=c("Ankylosauria", "Ceratopsidae", "Leptoceratopsidae", "
 lda_plottr(y, colscheme, shapescheme, groupname)
 
 # save CVA plot as .svg file
-ggsave(filename= 'family_lda.svg' , 
+ggsave(filename= "ceratopsidIncluded/Results/familyLDA.svg", 
   width = 700,
   height = 500,
   units = "mm", 
@@ -278,7 +288,7 @@ ggplot(loadingsFam, aes(x = factor(rowname, variables), y = loading, fill = comp
         legend.text = element_text(size=35))
 
 # save loadings plot as .svg file   
-ggsave(filename= 'familyloadings.svg' ,
+ggsave(filename= "ceratopsidIncluded/Results/familyloadings.svg",
        width = 800,
        height = 600,
        units = "mm", 
@@ -301,7 +311,7 @@ groupname = set_names(x=c("Ankylosauridae", "Nodosauridae", "Centrosaurinae", "C
 lda_plottr(y, colscheme, shapescheme, groupname)
 
 # save CVA plot as .svg file
-ggsave(filename= 'subfamily_lda.svg',
+ggsave(filename= "ceratopsidIncluded/Results/subfamilyLDA.svg",
         width = 700,
         height = 500,
         units = "mm", 
@@ -325,7 +335,7 @@ ggplot(loadingsSubfam, aes(x = factor(rowname, variables), y = loading, fill = c
         legend.text = element_text(size=35))
 
 # save loadings plot as .svg file   
-ggsave(filename= 'subfamilyloadings.svg' ,
+ggsave(filename= "ceratopsidIncluded/Results/subfamilyloadings.svg" ,
        width = 800,
        height = 600,
        units = "mm", 
@@ -346,6 +356,8 @@ THE.STATS<-function(
     num.perm, # number of iterations
     return.everything # whether want everything to be returned, significant or not (yes or no)
 ){
+  
+
   #########################################################################################################
   # preparation of data for analysis
   # @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@ #
@@ -380,11 +392,11 @@ THE.STATS<-function(
       x1 = vegdist(Y[group %in% c(co[1,elem], co[2,elem]),], method=sim.method)
       
       # fill out table as we go
-      ad = adonis(x1 ~ group[group %in% c(co[1,elem],co[2,elem])]);
+      ad = adonis2(x1 ~ group[group %in% c(co[1,elem],co[2,elem])]);
       pairs = c(pairs,paste(co[1,elem],'vs',co[2,elem]));
-      F.Model =c(F.Model,ad$aov.tab[1,4]) %>% round(., digits = 2);
-      R2 = c(R2,ad$aov.tab[1,5]) %>% round(., digits = 2);
-      p.value = c(p.value,ad$aov.tab[1,6] %>% round(., digits = 3))
+      F.Model =c(as.numeric(F.Model), as.numeric(ad[1,4])) %>% round(digits = 2);
+      R2 = c(as.numeric(R2), as.numeric(ad[1,3])) %>% round(digits = 2);
+      p.value = c(as.numeric(p.value), as.numeric(ad[1,5]) %>% round(digits = 3))
     }
 
     #correct p-values  
@@ -451,4 +463,4 @@ openxlsx::addWorksheet(wb=wrkbk2, "Subfamily Pairwise" )
 openxlsx::writeData(wrkbk2, 4, stres.subfamily$np.pair.test)
 
 # close and save excel sheets for PERMANOVA results
-openxlsx::saveWorkbook(wrkbk2, "toothy_PERMANOVA_results.xlsx")
+openxlsx::saveWorkbook(wrkbk2, "ceratopsidIncluded/Results/toothy_PERMANOVA_results.xlsx")
