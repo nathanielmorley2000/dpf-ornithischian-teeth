@@ -1,28 +1,30 @@
 # load libraries
 library("plyr")
-library("dplyr")
-library("tidyverse")
-library("readxl") 
-library("pcaMethods")
-library("ggplot2")
-library("rJava")
-library("xlsx")
-library("purrr")
-library("MASS")
+library("dplyr") 
 library("ggord")
+library("ggplot2")
+library("MASS")
 library("openxlsx")
-library("ggpubr")
+library("pcaMethods")
+library("purrr")
+library("readxl") 
+library("tibble")
+library("tidyr")
 library("vegan")
-#if (!requireNamespace("BiocManager", quietly = TRUE)){  install.packages("BiocManager") }
+
+
+# install BiocManager and pcaMethods - keep commented out unless needed
+#if (!requireNamespace("BiocManager", quietly = TRUE)){
+#  install.packages("BiocManager") 
+#  }
 #BiocManager::install("pcaMethods")
 
-# set working directory to noCeratopsids folder
-setwd("noCeratopsids/")
 
 # import data 
-crownAll<-read_excel("dpfornithishcians_noCeratopsids.xlsx", sheet="Raw Data")
+crownAll<-read_excel("noCeratopsids/dpfornithishcians_noCeratopsids.xlsx", sheet="Raw Data")
 crownAll<-crownAll[1:57,1:17]
 colnames(crownAll)<-c("Family", "Subfamily", "Genus", "Specimen Number", "Tooth Type", "CBL", "CH","M-CL", "AL",  "NL", "MCL", "DCL", "MDH", "MDL", "DDH", "DDL", "CA")
+
 
 # alter factor levels to match those used for referencing in the subsequent code
 crownAll$Family<-revalue(crownAll$Family, c("Ankylosauria"="A", "Leptoceratopsidae"="Le", "Pachycephalosauria"="Pa", "Thescelosauridae"="Th"))
@@ -59,7 +61,7 @@ impute_class<-function(crown,range1,range2,range3){
     
     # range represents the log-transformed data columns through numbers in square brackets with your first numerical column and your last numerical column, respectifully. 
     # use correlation matrix for PCA because SSI is a unitless measurement
-    est_data<-pca(log_all,method="bpca",centre=FALSE, cor=TRUE)
+    est_data<-pcaMethods::pca(log_all,method="bpca",centre=FALSE, cor=TRUE)
     
     est_matrix<-est_data@completeObs # This will retrieve the estimated matrix from the previous function.
     fin<-cbind(data[,range2],est_matrix)
@@ -152,15 +154,15 @@ myLDAproportions <- data.frame(Family = c(ldaFamily$proportion.of.trace,rep(NA, 
   as.data.frame() %>%
   round(., digits = 4) %>%
   rownames_to_column() %>%
-  rename(CV1 = V1, CV2 = V2, CV3 = V3, CV4 = V4)
+  dplyr::rename(CV1 = V1, CV2 = V2, CV3 = V3, CV4 = V4)
 myLDAFam.components=ldaFamily$coefficients%>%as.data.frame() %>% 
   round(., digits = 4) %>%
   rownames_to_column() %>%
-  rename(CV1 = LD1, CV2 = LD2, CV3 = LD3)
+  dplyr::rename(CV1 = LD1, CV2 = LD2, CV3 = LD3)
 myLDAsubFam.components=ldaSubfamily$coefficients%>%as.data.frame() %>% 
   round(., digits = 4) %>%  
   rownames_to_column() %>%
-  rename(CV1 = LD1, CV2 = LD2, CV3 = LD3, CV4 = LD4)
+  dplyr::rename(CV1 = LD1, CV2 = LD2, CV3 = LD3, CV4 = LD4)
 myLDAFam.tab=ldaFamily$mytab%>%as.data.frame()%>%spread(.,Actual, Freq)
 myLDAsubFam.tab=ldaSubfamily$mytab%>%as.data.frame()%>%spread(.,Actual, Freq)
 perctab=data.frame(class=c("Family","Subfamily"), perc=c(ldaFamily$perctab, ldaSubfamily$perctab) )%>% # input percentages into one data.frame for export
@@ -190,7 +192,7 @@ openxlsx::writeData(wrkbk, 6, myLDAsubFam.tab)
 openxlsx::addWorksheet(wb=wrkbk, "percTabs" )
 openxlsx::writeData(wrkbk, 7, perctab)
 
-openxlsx::saveWorkbook(wrkbk, "toothy_LDA_results.xlsx")
+openxlsx::saveWorkbook(wrkbk, "noCeratopsids/Results/toothy_LDA_results.xlsx")
 ############################################################################
 
 ########### new function to produce plots ###########
@@ -251,7 +253,7 @@ groupname = set_names(x=c("Ankylosauria", "Leptoceratopsidae", "Pachycephalosaur
 lda_plottr(y, colscheme, shapescheme, groupname)
 
 # save CVA plot as .svg file
-ggsave( filename= 'family_lda.svg' , # name of the file
+ggsave(filename= 'noCeratopsids/Results/family_lda.svg' , # name of the file
   width = 700,
   height = 500,
   units = "mm", 
@@ -277,7 +279,7 @@ ggplot(loadingsFam, aes(x = factor(rowname, variables), y = loading, fill = comp
         legend.text = element_text(size=35))
 
 # save loadings plot as .svg file   
-ggsave(filename= 'familyloadings.svg' ,
+ggsave(filename= 'noCeratopsids/Results/familyloadings.svg' ,
        width = 800,
        height = 600,
        units = "mm", 
@@ -300,7 +302,7 @@ groupname = set_names(x=c("Ankylosauridae", "Nodosauridae", "Leptoceratopsidae",
 lda_plottr(y, colscheme, shapescheme, groupname)
 
 # save plot as .svg file
-ggsave( filename= 'subfamily_lda.svg' , # name of the file
+ggsave( filename= 'noCeratopsids/Results/subfamily_lda.svg' , # name of the file
         width = 700,
         height = 500,
         units = "mm", 
@@ -325,7 +327,7 @@ ggplot(loadingsSubfam, aes(x = factor(rowname, variables), y = loading, fill = c
         legend.text = element_text(size=35))
 
 # save loadings plot as .svg file   
-ggsave(filename= 'subfamilyloadings.svg' ,
+ggsave(filename= 'noCeratopsids/Results/subfamilyloadings.svg' ,
        width = 800,
        height = 600,
        units = "mm", 
@@ -378,11 +380,11 @@ THE.STATS<-function(
       x1 = vegdist(Y[group %in% c(co[1,elem], co[2,elem]),], method=sim.method)
       
       # fill out table as we go
-      ad = adonis(x1 ~ group[group %in% c(co[1,elem],co[2,elem])]);
+      ad = adonis2(x1 ~ group[group %in% c(co[1,elem],co[2,elem])]);
       pairs = c(pairs,paste(co[1,elem],'vs',co[2,elem]));
-      F.Model =c(F.Model,ad$aov.tab[1,4]) %>% round(., digits = 2);
-      R2 = c(R2,ad$aov.tab[1,5]) %>% round(., digits = 2);
-      p.value = c(p.value,ad$aov.tab[1,6] %>% round(., digits = 3))
+      F.Model =c(as.numeric(F.Model), as.numeric(ad[1,4])) %>% round(digits = 2);
+      R2 = c(as.numeric(R2), as.numeric(ad[1,3])) %>% round(digits = 2);
+      p.value = c(as.numeric(p.value), as.numeric(ad[1,5]) %>% round(digits = 3))
     }
 
     #correct p-values  
@@ -449,4 +451,4 @@ openxlsx::addWorksheet(wb=wrkbk2, "Subfamily Pairwise" )
 openxlsx::writeData(wrkbk2, 4, stres.subfamily$np.pair.test)
 
 # close and save excel sheets for PERMANOVA results
-openxlsx::saveWorkbook(wrkbk2, "toothy_PERMANOVA_results.xlsx")
+openxlsx::saveWorkbook(wrkbk2, "noCeratopsids/Results/toothy_PERMANOVA_results.xlsx")
