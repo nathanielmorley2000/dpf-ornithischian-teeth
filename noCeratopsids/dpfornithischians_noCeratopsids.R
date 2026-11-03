@@ -7,7 +7,8 @@ library("MASS")
 library("openxlsx")
 library("pcaMethods")
 library("purrr")
-library("readxl") 
+library("readxl")
+library("svglite")
 library("tibble")
 library("tidyr")
 library("vegan")
@@ -221,20 +222,13 @@ lda_plottr=function(y, colscheme, shapescheme, groupname){
     scale_shape_manual(name = "Taxon", labels = groupname, values=shapescheme)+
     xlab("CV1")+
     ylab("CV2")+
-    theme_classic()+
-    theme(axis.text=element_text(color="black"),
-          axis.title.x=element_text(size=18, vjust=-0.5, color="black"),
-          axis.text.x=element_text(size=16, color="black"),
-          axis.title.y=element_text(size=18, angle=90, vjust=3, color="black"),
-          axis.text.y=element_text(size=16, angle=90, vjust=2, color="black"),
-          axis.ticks=element_line(color="black"),
-          axis.ticks.length=unit(2, "mm"),
-          panel.background = element_blank(),
-          panel.border=element_rect(fill=NA, color="black", size=1, linetype="solid"),
-          plot.margin = unit(c(3, 2, 4, 4), "mm"),
-          legend.title = element_text(size = 24),
-          legend.text = element_text(size=18),
-          legend.key.size = unit(1.0, 'cm'))
+    theme_test(base_size = 33) +
+    theme(axis.title.x=element_text(size=35, vjust=-0.5, color="black"),
+          axis.title.y=element_text(size=35, angle=90, vjust=3, color="black"),
+          legend.title = element_text(size = 38, hjust = 0.5),
+          legend.text = element_text(size=35),
+          legend.position = "bottom",
+          legend.title.position = "top")
   return(myplot)}
 
 ################################################### Family ############################################
@@ -258,6 +252,8 @@ ggsave(filename= 'noCeratopsids/Results/family_lda.svg' , # name of the file
   height = 500,
   units = "mm", 
   dpi= 1000,
+  device = svglite::svglite, 
+  fix_text_size = FALSE,
   scale = 0.6) # the quality of the plot exported
 
 # loadings plot for CV1 and CV2
@@ -272,18 +268,22 @@ ggplot(loadingsFam, aes(x = factor(rowname, variables), y = loading, fill = comp
   labs(y = "Loading",
        x = "Variable") +
   guides(fill=guide_legend(title="Axis")) +
-  theme_classic(base_size = 33) +
+  theme_test(base_size = 33) +
   theme(axis.title.x=element_text(size=35, vjust=-0.5, color="black"),
         axis.title.y=element_text(size=35, angle=90, vjust=3, color="black"),
-        legend.title = element_text(size = 38),
-        legend.text = element_text(size=35))
+        legend.title = element_text(size = 38, hjust = 0.5),
+        legend.text = element_text(size=35),
+        legend.position = "bottom",
+        legend.title.position = "top")
 
 # save loadings plot as .svg file   
 ggsave(filename= 'noCeratopsids/Results/familyloadings.svg' ,
-       width = 800,
-       height = 600,
+       width = 700,
+       height = 500,
        units = "mm", 
        dpi= 1000,
+       device = svglite::svglite, 
+       fix_text_size = FALSE,
        scale = 0.6)
 
 ################################################### Subfamily ############################################
@@ -307,6 +307,8 @@ ggsave( filename= 'noCeratopsids/Results/subfamily_lda.svg' , # name of the file
         height = 500,
         units = "mm", 
         dpi= 1000,
+        device = svglite::svglite, 
+        fix_text_size = FALSE,
         scale = 0.6) # the quality of the plot exported
 
 
@@ -320,18 +322,22 @@ ggplot(loadingsSubfam, aes(x = factor(rowname, variables), y = loading, fill = c
   labs(y = "Loading",
        x = "Variable") +
   guides(fill=guide_legend(title="Axis")) +
-  theme_classic(base_size = 33) +
+  theme_test(base_size = 33) +
   theme(axis.title.x=element_text(size=35, vjust=-0.5, color="black"),
         axis.title.y=element_text(size=35, angle=90, vjust=3, color="black"),
-        legend.title = element_text(size = 38),
-        legend.text = element_text(size=35))
+        legend.title = element_text(size = 38, hjust = 0.5),
+        legend.text = element_text(size=35),
+        legend.position = "bottom",
+        legend.title.position = "top")
 
 # save loadings plot as .svg file   
 ggsave(filename= 'noCeratopsids/Results/subfamilyloadings.svg' ,
-       width = 800,
-       height = 600,
+       width = 700,
+       height = 500,
        units = "mm", 
        dpi= 1000,
+       device = svglite::svglite, 
+       fix_text_size = FALSE,
        scale = 0.6)
 ###############################################################################################################################################
 ###############################################################################################################
