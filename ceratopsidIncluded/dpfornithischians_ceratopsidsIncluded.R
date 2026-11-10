@@ -232,6 +232,7 @@ lda_plottr=function(y, colscheme, shapescheme, groupname){
     scale_shape_manual(name = "Taxon", labels = groupname, values=shapescheme)+
     xlab("CV1")+
     ylab("CV2")+
+    guides(color = guide_legend(nrow=1)) +
     theme_test(base_size = 33) +
     theme(axis.title.x=element_text(size=35, vjust=-0.5, color="black"),
           axis.title.y=element_text(size=35, angle=90, vjust=3, color="black"),
