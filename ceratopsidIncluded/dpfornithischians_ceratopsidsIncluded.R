@@ -31,7 +31,8 @@ colnames(crownAll)<-c("Family", "Subfamily", "Genus", "Specimen Number", "Tooth 
 crownAll$Family<-revalue(crownAll$Family, c("Ceratopsidae"="C", "Ankylosauria"="A", "Leptoceratopsidae"="Le", "Pachycephalosauria"="Pa", "Thescelosauridae"="Th"))
 crownAll$Subfamily<-revalue(crownAll$Subfamily, c("Centrosaurinae"="Ce", "Chasmosaurinae"="Ch", "Ankylosauridae"="Anky", "Nodosauridae"="No","Leptoceratopsidae"="Le", "Pachycephalosauridae"="Pa", "Orodrominae"="Or"))
 
-
+# Create Results subdirectory
+dir.create("ceratopsidIncluded/Results")
 
 # Data Preparation =============================================================
 
